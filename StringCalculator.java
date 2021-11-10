@@ -6,11 +6,13 @@ public class StringCalculator {
 
         StringCalculatorTests sct = new StringCalculatorTests();
         sct.enbleUnitTest();
-        
+
     }
 
     int add(String input) {
-        return 0;
+        if(input.length() == 0)
+            return 0;
+        return Integer.parseInt(input);
     }
 
 }
