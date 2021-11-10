@@ -1,4 +1,6 @@
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 public class StringCalculator {
 
@@ -6,13 +8,33 @@ public class StringCalculator {
 
         StringCalculatorTests sct = new StringCalculatorTests();
         sct.enbleUnitTest();
-
     }
 
-    int add(String input) {
+    public int add(String input) {
+
         if(input.length() == 0)
             return 0;
-        return Integer.parseInt(input);
+
+        IntStream ints;
+        String seperator;
+
+        if(input.startsWith("//")) {
+            input = input.substring(2);
+            seperator = getSeperator(input);
+        } else {
+            seperator = ",";
+        }
+        ints = splitInput(input, seperator);
+        
+        return ints.sum();
+    }
+
+    private String getSeperator(String input) {
+        return "";
+    }
+
+    private IntStream splitInput(String string, String seperator) {
+        return Arrays.stream(string.split(seperator)).mapToInt(Integer::parseInt);
     }
 
 }
