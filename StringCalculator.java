@@ -35,15 +35,15 @@ class StringCalculatorTests {
     }
 
     void testDelimeter1() {
-        if(sc.add("//;\n1;2;3") != 6) error("Inputting //;\n1;2;3 does not return 6");
+        if(sc.add("//;\n1;2;3") != 6) error("Inputting //;/n1;2;3 does not return 6");
     }
 
     void testDelimeter2() {
-        if(sc.add("//|\n1|2|3") != 6) error("Inputting //|\n1|2|3 does not return 6");
+        if(sc.add("//|\n1|2|3") != 6) error("Inputting //|/n1|2|3 does not return 6");
     }
 
     void testDelimeter3() {
-        if(sc.add("//sep\n1sep2sep3") != 6) error("Inputting //sep\n1sep2sep3 does not return 6");
+        if(sc.add("//sep\n1sep2sep3") != 6) error("Inputting //sep/n1sep2sep3 does not return 6");
     }
 
     void testDelimeterMix() {
@@ -71,22 +71,14 @@ class StringCalculatorTests {
     }
 
     void enbleUnitTest(){
-        System.out.println("-------------UNIT TEST-----------------");
-        String name = "";
-        try {
-            Class<?> clazz = getClass();
-            Method[] methods = clazz.getMethods();
-            for (Method method : methods) {
-                System.out.println(method.getName());
-                if (method.getName().contains("test")) {
-                    name = method.getName();
-                    Method unitTest = clazz.getDeclaredMethod(name, null);
-                    unitTest.invoke(this);
-                }
-            }
-        }
-        catch(Exception e) {
-            System.out.println(name + ":" + e.getCause());
-        }
+        testEmpty();
+        testOne();
+        testOneAndTwo();
+        testMultiple();
+        testDelimeter1();
+        testDelimeter2();
+        testDelimeter3();
+        testDelimeterMix();
+        testNegative();
     }
 }
