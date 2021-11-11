@@ -1,4 +1,5 @@
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import java.util.regex.*;
@@ -7,9 +8,8 @@ public class StringCalculator {
 
     public static void main(String[] args) {
 
-        //StringCalculatorTests sct = new StringCalculatorTests();
-        //sct.enbleUnitTest();
-        System.out.println(add("//;\n1;2;3"));
+        StringCalculatorTests sct = new StringCalculatorTests();
+        sct.enbleUnitTest();
     }
 
     public static int add(String input) {
@@ -22,29 +22,49 @@ public class StringCalculator {
 
         if(input.startsWith("//")) {
             seperator = getSeperator(input);
-            input = input.replaceFirst(seperator + "\n", "").substring(2);
+            input = input.substring(2 + seperator.length() + 1); //Cuts of the seperation indicator in the beginning. 2 (for //) + sep.length + 2 (for \n)
         } else {
             seperator = ",";
         }
-        ints = splitInput(input, seperator);
+        ints = splitToIntStream(input, seperator);
         
         return ints.sum();
     }
 
-    private static String getSeperator(String input) {
-
-        Pattern p = Pattern.compile("(?<=\\/\\/)(.*?)(?=\\\n)");
-        Matcher m = p.matcher(input);
-        
-        if(!m.find()) {
-            System.out.println("Seperator not found; resolved to ','");
-            return ",";
-        }
-        return m.group(0);
+    //First call is usually hundreds of times slower than the other one. Later calls are only 20x slower.
+    private static String getSeperatorRegex(String input) {
+        Matcher matcher = Pattern.compile("(?<=\\/\\/)(.*?)(?=\\\n)").matcher(input);
+        if(matcher.find())
+            if(!matcher.group(0).isBlank())
+                return matcher.group(0);
+        System.out.println("Seperator not found; resolved to ','");
+        return ",";
     }
 
-    private static IntStream splitInput(String string, String seperator) {
-        return Arrays.stream(string.split(seperator)).mapToInt(Integer::parseInt);
+    //This one is a lot faster.
+    private static String getSeperator(String input) {
+        String seperator = input.substring(2, input.indexOf("\n"));
+        if(!seperator.isBlank())
+            return seperator;
+        System.out.println("Seperator not found; resolved to ','");
+        return ",";
+    }
+
+    private static IntStream splitToIntStream(String string, String seperator) {
+        char[] chars = string.toCharArray();
+        char[] sep = seperator.toCharArray();
+        ArrayList<Integer> ints = new ArrayList<Integer>();
+        int start = 0;
+        for(int i = 0; i < chars.length; i++) {
+            for(int end = i, j = 0; i < chars.length && j < sep.length && chars[i] == sep[j]; i++, j++) {
+                if(j + 1 == sep.length) {
+                    ints.add(Integer.parseInt(string.substring(start, end)));
+                    start = i + 1;
+                }
+            }
+        }
+        ints.add(Integer.parseInt(string.substring(start, string.length())));
+        return ints.stream().mapToInt(Integer::valueOf);
     }
 
 }
@@ -54,46 +74,46 @@ class StringCalculatorTests {
     StringCalculator sc = new StringCalculator();
 
     public void testEmpty() {
-        if(sc.add("") != 0) error("Inputting empty does not return 0");
+        if(StringCalculator.add("") != 0) error("Inputting empty does not return 0");
     }
 
     public void testOne() {
-        if(sc.add("1") != 1) error("Inputting 1 does not return 1");
+        if(StringCalculator.add("1") != 1) error("Inputting 1 does not return 1");
     }
 
     public void testOneAndTwo() {
-        if(sc.add("1,2") != 3) error("Inputting 1,2 does not return 3");
+        if(StringCalculator.add("1,2") != 3) error("Inputting 1,2 does not return 3");
     }
 
     public void testMultiple() {
-        if(sc.add("1,2,3") != 6) error("Inputting 1,2,3 does not return 6");
+        if(StringCalculator.add("1,2,3") != 6) error("Inputting 1,2,3 does not return 6");
     }
 
     public void testDelimeter1() {
-        if(sc.add("//;\n1;2;3") != 6) error("Inputting //;\n1;2;3 does not return 6");
+        if(StringCalculator.add("//;\n1;2;3") != 6) error("Inputting //;\n1;2;3 does not return 6");
     }
 
     public void testDelimeter2() {
-        if(sc.add("//|\n1|2|3") != 6) error("Inputting //|\n1|2|3 does not return 6");
+        if(StringCalculator.add("//|\n1|2|3") != 6) error("Inputting //|\n1|2|3 does not return 6");
     }
 
     public void testDelimeter3() {
-        if(sc.add("//sep\n1sep2sep3") != 6) error("Inputting //sep\n1sep2sep3 does not return 6");
+        if(StringCalculator.add("//sep\n1sep2sep3") != 6) error("Inputting //sep\n1sep2sep3 does not return 6");
     }
 
     public void testDelimeterMix() {
         try{
-            sc.add("//|\n1|2,3sep4,5");
+            StringCalculator.add("//|\n1|2,3sep4,5");
         }
         catch(Exception e) {
-            if(!(e instanceof IllegalArgumentException))
-                error("Inputting //|\n1|2,3sep4,5 should return error saying expected '|' but found ','");
+            if(!(e.getClass() == IllegalArgumentException.class))
+                error("Inputting //|\n1|2,3sep4,5 should throw IllegalArgumentException saying expected '|' but found ','");
         }
     }
 
     public void testNegative() {
         try{
-            sc.add("1,-2");
+            StringCalculator.add("1,-2");
         }
         catch(Exception e) {
             if(!(e instanceof IllegalAccessException))
