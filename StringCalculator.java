@@ -9,12 +9,14 @@ public class StringCalculator {
 
         StringCalculatorTests sct = new StringCalculatorTests();
         sct.enbleUnitTest();
-
-        
     }
 
     public static int add(String input) {
         return getIntStreamFromStringInput(input).sum();
+    }
+
+    public static int multiply(String input) {
+        return getIntStreamFromStringInput(input).reduce(1, (a, b) -> a * b);
     }
 
     private static IntStream getIntStreamFromStringInput(String input) {
