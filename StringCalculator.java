@@ -1,16 +1,18 @@
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import java.util.regex.*;
 
 public class StringCalculator {
 
     public static void main(String[] args) {
 
-        StringCalculatorTests sct = new StringCalculatorTests();
-        sct.enbleUnitTest();
+        //StringCalculatorTests sct = new StringCalculatorTests();
+        //sct.enbleUnitTest();
+        System.out.println(add("//;\n1;2;3"));
     }
 
-    public int add(String input) {
+    public static int add(String input) {
 
         if(input.length() == 0)
             return 0;
@@ -19,8 +21,8 @@ public class StringCalculator {
         String seperator;
 
         if(input.startsWith("//")) {
-            input = input.substring(2);
             seperator = getSeperator(input);
+            input = input.replaceFirst(seperator + "\n", "").substring(2);
         } else {
             seperator = ",";
         }
@@ -29,11 +31,19 @@ public class StringCalculator {
         return ints.sum();
     }
 
-    private String getSeperator(String input) {
-        return "";
+    private static String getSeperator(String input) {
+
+        Pattern p = Pattern.compile("(?<=\\/\\/)(.*?)(?=\\\n)");
+        Matcher m = p.matcher(input);
+        
+        if(!m.find()) {
+            System.out.println("Seperator not found; resolved to ','");
+            return ",";
+        }
+        return m.group(0);
     }
 
-    private IntStream splitInput(String string, String seperator) {
+    private static IntStream splitInput(String string, String seperator) {
         return Arrays.stream(string.split(seperator)).mapToInt(Integer::parseInt);
     }
 
