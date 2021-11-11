@@ -1,7 +1,6 @@
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.IntStream;
+import java.util.*;
+import java.util.stream.*;
 import java.util.regex.*;
 
 public class StringCalculator {
@@ -10,25 +9,26 @@ public class StringCalculator {
 
         StringCalculatorTests sct = new StringCalculatorTests();
         sct.enbleUnitTest();
+
+        
     }
 
     public static int add(String input) {
+        return getIntStreamFromStringInput(input).sum();
+    }
 
+    private static IntStream getIntStreamFromStringInput(String input) {
         if(input.length() == 0)
-            return 0;
+            return IntStream.of(new int[]{0});
 
-        IntStream ints;
         String seperator;
-
         if(input.startsWith("//")) {
             seperator = getSeperator(input);
             input = input.substring(2 + seperator.length() + 1); //Cuts of the seperation indicator in the beginning. 2 (for //) + sep.length + 2 (for \n)
-        } else {
-            seperator = ",";
         }
-        ints = splitToIntStream(input, seperator);
-        
-        return ints.sum();
+        else
+            seperator = ",";
+        return splitToIntStream(input, seperator);
     }
 
     //First call is usually hundreds of times slower than the other one. Later calls are only 20x slower.
@@ -55,16 +55,32 @@ public class StringCalculator {
         char[] sep = seperator.toCharArray();
         ArrayList<Integer> ints = new ArrayList<Integer>();
         int start = 0;
-        for(int i = 0; i < chars.length; i++) {
-            for(int end = i, j = 0; i < chars.length && j < sep.length && chars[i] == sep[j]; i++, j++) {
-                if(j + 1 == sep.length) {
-                    ints.add(Integer.parseInt(string.substring(start, end)));
-                    start = i + 1;
+        for(int i = 0; i < chars.length; i++)
+            for(int end = i, j = 0; i < chars.length && j < sep.length; j++)
+                if(chars[i] != sep[j]) {
+                    if(!Character.isDigit(chars[i]) && chars[i] != '-')
+                        throw new IllegalArgumentException("Expected '" + seperator + "' but found '" + chars[i] + "' at index " + i + ".");
                 }
-            }
-        }
-        ints.add(Integer.parseInt(string.substring(start, string.length())));
+                else if(j + 1 == sep.length) {
+                    addSubstringToList(string, start, end, ints);
+                    start = i + 1;
+                    break;
+                }
+                else
+                    i++;
+        addSubstringToList(string, start, string.length(), ints);
+        disallowNegatives(ints);
         return ints.stream().mapToInt(Integer::valueOf);
+    }
+
+    private static void addSubstringToList(String string, int start, int end, List<Integer> list) {
+        list.add(Integer.parseInt(string.substring(start, end)));
+    }
+
+    private static void disallowNegatives(List<Integer> list) {
+        Object[] negatives = list.stream().filter(i -> i < 0).toArray();
+        if(negatives.length > 0)
+            throw new IllegalArgumentException("Negative numbers are not allowed but found: " + Arrays.toString(negatives));
     }
 
 }
@@ -113,11 +129,11 @@ class StringCalculatorTests {
 
     public void testNegative() {
         try{
-            StringCalculator.add("1,-2");
+            StringCalculator.add("1,-2,3");
         }
         catch(Exception e) {
-            if(!(e instanceof IllegalAccessException))
-                error("Inputting 1,-2 should return error saying negative numbers not allowed but found: <list of negative number(s)>");
+            if(!(e.getClass() == IllegalArgumentException.class))
+                error("Inputting 1,-2 should throw IllegalArgumentException saying negative numbers not allowed but found: <list of negative number(s)>");
         }
     }
 
