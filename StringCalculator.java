@@ -15,8 +15,16 @@ public class StringCalculator {
         return getIntStreamFromStringInput(input).sum();
     }
 
-    public static int multiply(String input) {
+    public static int sub(String input) {
+        return getIntStreamFromStringInput(input).reduce(1, (a, b) -> a - b);
+    }
+
+    public static int mult(String input) {
         return getIntStreamFromStringInput(input).reduce(1, (a, b) -> a * b);
+    }
+
+    public static int div(String input) {
+        return getIntStreamFromStringInput(input).reduce(1, (a, b) -> a / b);
     }
 
     private static IntStream getIntStreamFromStringInput(String input) {
